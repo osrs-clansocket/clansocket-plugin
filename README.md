@@ -1,0 +1,1 @@
+# clansocket-plugin
