@@ -1,7 +1,5 @@
 package com.clansocket.panel;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -25,12 +23,20 @@ public class PanelStats
 	        ConnectionState.DISCONNECTED);
 	private volatile String endpoint = "";
 	private volatile String clanReason;
-	private final Map<StreamGate, AtomicLong> counts = initCounts();
-	private final Map<StreamGate, RateBuffer> rates = initRates();
+	private final AtomicLong[] counts;
+	private final RateBuffer[] rates;
 
 	@Inject
 	public PanelStats(final ConfigManager configManager) {
 		this.configManager = configManager;
+		final int n = StreamGate.ALL.size();
+		this.counts = new AtomicLong[n];
+		this.rates = new RateBuffer[n];
+		for (int i = 0; i < n; i++)
+		{
+			counts[i] = new AtomicLong();
+			rates[i] = new RateBuffer();
+		}
 	}
 
 	public ConnectionState getConnectionState()
@@ -55,34 +61,29 @@ public class PanelStats
 
 	public long count(final StreamGate gate)
 	{
-		final AtomicLong c = counts.get(gate);
-		return c == null ? 0L : c.get();
+		return counts[gate.ordinal()].get();
 	}
 
 	public void bump(final StreamGate gate)
 	{
-		final AtomicLong c = counts.get(gate);
-		if (c != null)
-		{
-			c.incrementAndGet();
-		}
-		final RateBuffer rb = rates.get(gate);
-		if (rb != null)
-		{
-			rb.bump();
-		}
+		final int idx = gate.ordinal();
+		counts[idx].incrementAndGet();
+		rates[idx].bump();
 	}
 
 	public int[] rateSnapshot(final StreamGate gate)
 	{
-		final RateBuffer rb = rates.get(gate);
-		return rb == null ? new int[RateBuffer.WINDOW_SECONDS] : rb.snapshot();
+		return rates[gate.ordinal()].snapshot();
+	}
+
+	public void fillRateSnapshot(final StreamGate gate, final int[] out)
+	{
+		rates[gate.ordinal()].fillSnapshot(out);
 	}
 
 	public long lastEventAt(final StreamGate gate)
 	{
-		final RateBuffer rb = rates.get(gate);
-		return rb != null ? rb.lastEventAt() : 0L;
+		return rates[gate.ordinal()].lastEventAt();
 	}
 
 	public void loadCounts()
@@ -119,22 +120,5 @@ public class PanelStats
 	public void markReconnectAttempt(final int attempt)
 	{
 		connectionState.set(attempt == 0 ? ConnectionState.RECONNECTING : ConnectionState.DISCONNECTED);
-	}
-
-	private static <T> Map<StreamGate, T> initPerGate(final java.util.function.Supplier<T> factory)
-	{
-		final Map<StreamGate, T> map = new HashMap<>(StreamGate.ALL.size());
-		StreamGate.ALL.forEach(gate -> map.put(gate, factory.get()));
-		return map;
-	}
-
-	private static Map<StreamGate, AtomicLong> initCounts()
-	{
-		return initPerGate(AtomicLong::new);
-	}
-
-	private static Map<StreamGate, RateBuffer> initRates()
-	{
-		return initPerGate(RateBuffer::new);
 	}
 }

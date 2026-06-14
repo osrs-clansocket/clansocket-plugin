@@ -1,5 +1,7 @@
 package com.clansocket;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -41,9 +43,12 @@ public class ClanSocket
 	private PresetApplier presetApplier;
 	@Inject
 	private PendingQueue pending;
+	@Inject
+	private ScheduledExecutorService executor;
 	@Getter
 	private volatile String endpoint;
 	private volatile boolean shouldBeConnected;
+	private volatile boolean drained;
 	private int retryAttempts;
 	private WebSocket ws;
 
@@ -75,6 +80,7 @@ public class ClanSocket
 	public synchronized void disconnect()
 	{
 		shouldBeConnected = false;
+		drained = false;
 		reconnectScheduler.cancel();
 		if (ws != null)
 		{
@@ -87,6 +93,11 @@ public class ClanSocket
 
 	public void send(final Object payload)
 	{
+		executor.execute(() -> doSend(payload));
+	}
+
+	private void doSend(final Object payload)
+	{
 		final String json = Json.GSON.toJson(payload);
 		if (json.length() > ClanSocketConstants.PAYLOAD_WARN_BYTES)
 		{
@@ -98,12 +109,25 @@ public class ClanSocket
 		{
 			local = ws;
 		}
-		if (local != null)
+		if (local == null || !drained)
 		{
-			local.send(json);
+			pending.offer(json);
 			return;
 		}
-		pending.offer(json);
+		local.send(json);
+	}
+
+	public void drainAndArm(final WebSocket newWs)
+	{
+		executor.execute(() ->
+		{
+			String msg;
+			while ((msg = pending.poll()) != null)
+			{
+				newWs.send(msg);
+			}
+			drained = true;
+		});
 	}
 
 	public synchronized void resetBackoff()
@@ -126,6 +150,7 @@ public class ClanSocket
 	public synchronized void handleClose(final String reason)
 	{
 		ws = null;
+		drained = false;
 		if (!shouldBeConnected)
 		{
 			return;
@@ -141,7 +166,7 @@ public class ClanSocket
 		{
 			return;
 		}
-		ws = opener.open(endpoint, new SocketCallback(this, chatEmitter, pending, sessions, panelStats, consentDispatch,
+		ws = opener.open(endpoint, new SocketCallback(this, chatEmitter, sessions, panelStats, consentDispatch,
 		        listeners, presetApplier));
 	}
 }

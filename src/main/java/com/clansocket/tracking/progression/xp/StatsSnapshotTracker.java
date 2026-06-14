@@ -19,6 +19,8 @@ import com.clansocket.tracking.progression.ProgressionConstants;
 @Singleton
 public class StatsSnapshotTracker extends AbstractWarmupSnapshotTracker
 {
+	private static final Skill[] SKILLS = Skill.values();
+
 	@Inject
 	private XpState state;
 	@Inject
@@ -43,13 +45,13 @@ public class StatsSnapshotTracker extends AbstractWarmupSnapshotTracker
 	@Override
 	protected void buildAndEmit()
 	{
-		for (final Skill skill : Skill.values())
+		for (final Skill skill : SKILLS)
 		{
 			state.setXp(skill, client.getSkillExperience(skill));
 			state.setRealLevel(skill, client.getRealSkillLevel(skill));
 		}
-		final List<SkillEntry> entries = new ArrayList<>(Skill.values().length);
-		for (final Skill skill : Skill.values())
+		final List<SkillEntry> entries = new ArrayList<>(SKILLS.length);
+		for (final Skill skill : SKILLS)
 		{
 			entries.add(new SkillEntry(skill.name(), client.getRealSkillLevel(skill),
 			        client.getBoostedSkillLevel(skill), client.getSkillExperience(skill)));

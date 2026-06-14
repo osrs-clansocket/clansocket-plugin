@@ -15,6 +15,7 @@ import net.runelite.client.eventbus.Subscribe;
 
 import com.clansocket.ClanSocketConfig;
 import com.clansocket.bus.AbstractStateTracker;
+import com.clansocket.bus.primitive.IntIntMap;
 import com.clansocket.protocol.common.Payload;
 import com.clansocket.protocol.inventory.Item;
 import com.clansocket.protocol.inventory.ItemCause;
@@ -32,7 +33,7 @@ public class ContainerTracker extends AbstractStateTracker
 	private MenuClickBuffer menuBuffer;
 
 	private final Map<Integer, Pending> pending = new HashMap<>();
-	private final Map<Integer, Map<Integer, Integer>> lastEmitted = new HashMap<>();
+	private final Map<Integer, IntIntMap> lastEmitted = new HashMap<>();
 	private final Map<Integer, Long> lastEmittedHash = new HashMap<>();
 	private boolean didInitialSnapshot;
 
@@ -101,8 +102,8 @@ public class ContainerTracker extends AbstractStateTracker
 		{
 			return;
 		}
-		final Map<Integer, Integer> current = Deltas.rawIdQtyMap(p.ids, p.qtys);
-		final Map<Integer, Integer> prev = lastEmitted.get(rawId);
+		final IntIntMap current = Deltas.rawIdQtyMap(p.ids, p.qtys);
+		final IntIntMap prev = lastEmitted.get(rawId);
 		final List<Item> items = ItemSnapshots.resolve(p, itemNames);
 		batcher.enqueue(
 		        new Payload("container", "hash", Long.toHexString(hash), "containerLabel", p.label, "items", items));
@@ -114,7 +115,7 @@ public class ContainerTracker extends AbstractStateTracker
 		lastEmittedHash.put(rawId, hash);
 	}
 
-	private void emitDelta(final String label, final Map<Integer, Integer> prev, final Map<Integer, Integer> current)
+	private void emitDelta(final String label, final IntIntMap prev, final IntIntMap current)
 	{
 		final List<ItemChange> delta = Deltas.compute(prev, current, itemNames);
 		if (delta.isEmpty())

@@ -40,17 +40,22 @@ public final class RateBuffer
 
 	public int[] snapshot()
 	{
+		final int[] out = new int[WINDOW_SECONDS];
+		fillSnapshot(out);
+		return out;
+	}
+
+	public void fillSnapshot(final int[] out)
+	{
 		synchronized (lock)
 		{
 			final long now = nowSeconds();
 			advance(now);
-			final int[] out = new int[WINDOW_SECONDS];
 			final int oldest = (int) ((now + 1) % WINDOW_SECONDS);
 			for (int i = 0; i < WINDOW_SECONDS; i++)
 			{
 				out[i] = buckets[(oldest + i) % WINDOW_SECONDS];
 			}
-			return out;
 		}
 	}
 

@@ -6,9 +6,7 @@ import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -25,6 +23,7 @@ import com.clansocket.ClanSocketConfig;
 import com.clansocket.ClanSocketConstants;
 import com.clansocket.panel.PanelConstants;
 import com.clansocket.panel.PanelStats;
+import com.clansocket.panel.RateBuffer;
 import com.clansocket.panel.widgets.StreamGate;
 import com.clansocket.panel.widgets.TelemetryCard;
 
@@ -33,7 +32,8 @@ public class BodyPanel extends JPanel
 {
 	private final ConfigManager configManager;
 	private final List<StreamGate> ordered = buildOrder();
-	private final Map<StreamGate, TelemetryCard> cards = new HashMap<>(StreamGate.ALL.size());
+	private final TelemetryCard[] cards = new TelemetryCard[StreamGate.ALL.size()];
+	private final int[] rateScratch = new int[RateBuffer.WINDOW_SECONDS];
 
 	@Inject
 	public BodyPanel(final ConfigManager configManager, final SpriteManager spriteManager) {
@@ -47,7 +47,7 @@ public class BodyPanel extends JPanel
 		for (final StreamGate gate : ordered)
 		{
 			final TelemetryCard card = makeCard(gate);
-			cards.put(gate, card);
+			cards[gate.ordinal()] = card;
 			spriteManager.getSpriteAsync(gate.spriteId(), 0, card::setIconImage);
 			grid.add(card);
 		}
@@ -60,7 +60,7 @@ public class BodyPanel extends JPanel
 		final boolean clanMode = config.mode() == ClanSocketConfig.ConfigMode.CLAN;
 		for (final StreamGate gate : ordered)
 		{
-			final TelemetryCard card = cards.get(gate);
+			final TelemetryCard card = cards[gate.ordinal()];
 			card.setActive(gate.isEnabled(config));
 			card.setLocked(clanMode);
 			if (BodyPanelConstants.COMPACT.contains(gate))
@@ -68,7 +68,8 @@ public class BodyPanel extends JPanel
 				card.updateInfrequent(stats.count(gate), stats.lastEventAt(gate));
 			} else
 			{
-				card.updateFrequent(stats.count(gate), stats.rateSnapshot(gate));
+				stats.fillRateSnapshot(gate, rateScratch);
+				card.updateFrequent(stats.count(gate), rateScratch);
 			}
 		}
 	}
@@ -91,7 +92,7 @@ public class BodyPanel extends JPanel
 				continue;
 			}
 			width = Math.max(width, fm.stringWidth(gate.displayName()));
-			spark.add(cards.get(gate));
+			spark.add(cards[gate.ordinal()]);
 		}
 		final int target = width + PanelConstants.CARD_LABEL_PAD;
 		for (final TelemetryCard card : spark)

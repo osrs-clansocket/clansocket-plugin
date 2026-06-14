@@ -14,6 +14,7 @@ import net.runelite.client.eventbus.Subscribe;
 import com.clansocket.ClanSocketConfig;
 import com.clansocket.bus.AbstractStateTracker;
 import com.clansocket.bus.Hashes;
+import com.clansocket.bus.primitive.IntObjectMap;
 import com.clansocket.protocol.common.Payload;
 
 @Singleton
@@ -23,6 +24,10 @@ public class SlayerTracker extends AbstractStateTracker
 	private ClanSocketConfig config;
 
 	private long lastSignature = Long.MIN_VALUE;
+
+	private final IntObjectMap<String> regularTaskNameCache = new IntObjectMap<>();
+	private final IntObjectMap<String> bossTaskNameCache = new IntObjectMap<>();
+	private final IntObjectMap<String> areaNameCache = new IntObjectMap<>();
 
 	@Override
 	protected void onLoginScreen()
@@ -84,14 +89,25 @@ public class SlayerTracker extends AbstractStateTracker
 		{
 			return null;
 		}
-		final Integer taskDbRow = taskId == CombatConstants.SLAYER_TASK_ID_BOSSES
-		        ? lookupBossTaskDbRow(bossId)
-		        : lookupRegularTaskDbRow(taskId);
+		final boolean isBossTask = taskId == CombatConstants.SLAYER_TASK_ID_BOSSES;
+		final IntObjectMap<String> cache = isBossTask ? bossTaskNameCache : regularTaskNameCache;
+		final int cacheKey = isBossTask ? bossId : taskId;
+		final String cached = cache.get(cacheKey);
+		if (cached != null)
+		{
+			return cached;
+		}
+		final Integer taskDbRow = isBossTask ? lookupBossTaskDbRow(bossId) : lookupRegularTaskDbRow(taskId);
 		if (taskDbRow == null)
 		{
 			return null;
 		}
-		return (String) client.getDBTableField(taskDbRow, DBTableID.SlayerTask.COL_NAME_UPPERCASE, 0)[0];
+		final String name = (String) client.getDBTableField(taskDbRow, DBTableID.SlayerTask.COL_NAME_UPPERCASE, 0)[0];
+		if (name != null)
+		{
+			cache.put(cacheKey, name);
+		}
+		return name;
 	}
 
 	private Integer lookupBossTaskDbRow(final int bossId)
@@ -118,12 +134,23 @@ public class SlayerTracker extends AbstractStateTracker
 		{
 			return null;
 		}
+		final String cached = areaNameCache.get(areaId);
+		if (cached != null)
+		{
+			return cached;
+		}
 		final List<Integer> areaRows = client.getDBRowsByValue(DBTableID.SlayerArea.ID,
 		        DBTableID.SlayerArea.COL_AREA_ID, 0, areaId);
 		if (areaRows.isEmpty())
 		{
 			return null;
 		}
-		return (String) client.getDBTableField(areaRows.get(0), DBTableID.SlayerArea.COL_AREA_NAME_IN_HELPER, 0)[0];
+		final String name = (String) client.getDBTableField(areaRows.get(0), DBTableID.SlayerArea.COL_AREA_NAME_IN_HELPER,
+		        0)[0];
+		if (name != null)
+		{
+			areaNameCache.put(areaId, name);
+		}
+		return name;
 	}
 }

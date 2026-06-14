@@ -2,7 +2,6 @@ package com.clansocket.transport;
 
 import com.clansocket.ClanSocket;
 import com.clansocket.ClanSocketConstants;
-import com.clansocket.bus.PendingQueue;
 import com.clansocket.chat.GameChatEmitter;
 import com.clansocket.config.preset.PresetApplier;
 import com.clansocket.config.preset.PresetSchema;
@@ -22,19 +21,17 @@ public final class SocketCallback extends WebSocketListener
 {
 	private final ClanSocket socket;
 	private final GameChatEmitter chatEmitter;
-	private final PendingQueue pending;
 	private final SessionStore sessions;
 	private final PanelStats panelStats;
 	private final ConsentDispatch consentDispatch;
 	private final LifecycleListeners listeners;
 	private final PresetApplier presetApplier;
 
-	public SocketCallback(final ClanSocket socket, final GameChatEmitter chatEmitter, final PendingQueue pending,
-	        final SessionStore sessions, final PanelStats panelStats, final ConsentDispatch consentDispatch,
-	        final LifecycleListeners listeners, final PresetApplier presetApplier) {
+	public SocketCallback(final ClanSocket socket, final GameChatEmitter chatEmitter, final SessionStore sessions,
+	        final PanelStats panelStats, final ConsentDispatch consentDispatch, final LifecycleListeners listeners,
+	        final PresetApplier presetApplier) {
 		this.socket = socket;
 		this.chatEmitter = chatEmitter;
-		this.pending = pending;
 		this.sessions = sessions;
 		this.panelStats = panelStats;
 		this.consentDispatch = consentDispatch;
@@ -49,17 +46,8 @@ public final class SocketCallback extends WebSocketListener
 		socket.resetBackoff();
 		chatEmitter.connected(socket.getEndpoint());
 		panelStats.markConnected();
-		drainPending(webSocket);
+		socket.drainAndArm(webSocket);
 		listeners.fireOnOpen();
-	}
-
-	private void drainPending(final WebSocket webSocket)
-	{
-		String msg;
-		while ((msg = pending.poll()) != null)
-		{
-			webSocket.send(msg);
-		}
 	}
 
 	@Override

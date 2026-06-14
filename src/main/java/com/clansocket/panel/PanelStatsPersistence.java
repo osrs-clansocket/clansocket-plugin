@@ -1,6 +1,5 @@
 package com.clansocket.panel;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.runelite.client.config.ConfigManager;
@@ -13,43 +12,41 @@ public final class PanelStatsPersistence
 	private PanelStatsPersistence() {
 	}
 
-	public static void load(final ConfigManager mgr, final Map<StreamGate, AtomicLong> counts,
-	        final Map<StreamGate, RateBuffer> rates)
+	public static void load(final ConfigManager mgr, final AtomicLong[] counts, final RateBuffer[] rates)
 	{
-		for (final StreamGate gate : StreamGate.ALL)
+		for (int i = 0; i < StreamGate.ALL.size(); i++)
 		{
+			final StreamGate gate = StreamGate.ALL.get(i);
 			final Long c = mgr.getRSProfileConfiguration(ClanSocketConstants.CONFIG_GROUP, countConfigKey(gate),
 			        long.class);
-			counts.get(gate).set(c == null ? 0L : c);
+			counts[i].set(c == null ? 0L : c);
 			final Long t = mgr.getRSProfileConfiguration(ClanSocketConstants.CONFIG_GROUP, lastEventAtConfigKey(gate),
 			        long.class);
-			rates.get(gate).setLastEventAt(t == null ? 0L : t);
+			rates[i].setLastEventAt(t == null ? 0L : t);
 		}
 	}
 
-	public static void flush(final ConfigManager mgr, final Map<StreamGate, AtomicLong> counts,
-	        final Map<StreamGate, RateBuffer> rates)
+	public static void flush(final ConfigManager mgr, final AtomicLong[] counts, final RateBuffer[] rates)
 	{
 		if (mgr.getRSProfileKey() == null)
 		{
 			return;
 		}
-		for (final StreamGate gate : StreamGate.ALL)
+		for (int i = 0; i < StreamGate.ALL.size(); i++)
 		{
-			mgr.setRSProfileConfiguration(ClanSocketConstants.CONFIG_GROUP, countConfigKey(gate),
-			        counts.get(gate).get());
+			final StreamGate gate = StreamGate.ALL.get(i);
+			mgr.setRSProfileConfiguration(ClanSocketConstants.CONFIG_GROUP, countConfigKey(gate), counts[i].get());
 			mgr.setRSProfileConfiguration(ClanSocketConstants.CONFIG_GROUP, lastEventAtConfigKey(gate),
-			        rates.get(gate).lastEventAt());
+			        rates[i].lastEventAt());
 		}
 	}
 
-	public static void reset(final ConfigManager mgr, final Map<StreamGate, AtomicLong> counts,
-	        final Map<StreamGate, RateBuffer> rates)
+	public static void reset(final ConfigManager mgr, final AtomicLong[] counts, final RateBuffer[] rates)
 	{
-		for (final StreamGate gate : StreamGate.ALL)
+		for (int i = 0; i < counts.length; i++)
 		{
-			counts.get(gate).set(0L);
-			rates.get(gate).setLastEventAt(0L);
+			counts[i].set(0L);
+			rates[i].setLastEventAt(0L);
 		}
 		if (mgr.getRSProfileKey() == null)
 		{

@@ -9,6 +9,8 @@ import com.clansocket.ClanSocketConfig;
 
 public final class StreamGate
 {
+	private static int NEXT_ORDINAL;
+
 	public static final StreamGate SKILLS_SNAPSHOT = new StreamGate("Skills snapshot",
 	        ClanSocketConfig::streamSkillsSnapshot, "streamSkillsSnapshot", SpriteID.SideIcons.STATS);
 	public static final StreamGate XP_GAINS = new StreamGate("XP gains", ClanSocketConfig::streamXpGains,
@@ -67,6 +69,7 @@ public final class StreamGate
 	private final Function<ClanSocketConfig, Boolean> getter;
 	private final String configKey;
 	private final int spriteId;
+	private final int ordinal;
 
 	private StreamGate(final String displayName, final Function<ClanSocketConfig, Boolean> getter,
 	        final String configKey, final int spriteId) {
@@ -74,6 +77,7 @@ public final class StreamGate
 		this.getter = getter;
 		this.configKey = configKey;
 		this.spriteId = spriteId;
+		this.ordinal = NEXT_ORDINAL++;
 	}
 
 	public String displayName()
@@ -89,6 +93,11 @@ public final class StreamGate
 	public int spriteId()
 	{
 		return spriteId;
+	}
+
+	public int ordinal()
+	{
+		return ordinal;
 	}
 
 	public boolean isEnabled(final ClanSocketConfig config)

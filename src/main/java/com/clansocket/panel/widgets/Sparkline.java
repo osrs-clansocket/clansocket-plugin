@@ -22,7 +22,17 @@ public class Sparkline extends JComponent
 
 	public void setSamples(final int[] data)
 	{
-		this.samples = data == null ? new int[0] : data;
+		if (data == null || data.length == 0)
+		{
+			this.samples = new int[0];
+			repaint();
+			return;
+		}
+		if (this.samples.length != data.length)
+		{
+			this.samples = new int[data.length];
+		}
+		System.arraycopy(data, 0, this.samples, 0, data.length);
 		repaint();
 	}
 

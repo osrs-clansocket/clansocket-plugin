@@ -1,9 +1,7 @@
 package com.clansocket.tracking.inventory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -19,6 +17,7 @@ import net.runelite.client.eventbus.Subscribe;
 
 import com.clansocket.ClanSocketConfig;
 import com.clansocket.bus.AbstractStateTracker;
+import com.clansocket.bus.primitive.IntIntMap;
 import com.clansocket.protocol.common.Payload;
 import com.clansocket.protocol.inventory.Item;
 import com.clansocket.protocol.inventory.ItemChange;
@@ -38,7 +37,7 @@ public class BankSessionTracker extends AbstractStateTracker
 	private boolean bankOpen;
 	private boolean openEventEmitted;
 	private long openedAtMs;
-	private Map<Integer, Integer> openQtyMap;
+	private IntIntMap openQtyMap;
 
 	@Override
 	protected void onLoginScreen()
@@ -120,12 +119,12 @@ public class BankSessionTracker extends AbstractStateTracker
 		return boundaries;
 	}
 
-	private static Map<Integer, Integer> toQtyMap(final List<Item> items)
+	private static IntIntMap toQtyMap(final List<Item> items)
 	{
-		final Map<Integer, Integer> map = new HashMap<>(items.size());
+		final IntIntMap map = new IntIntMap(items.size(), 0);
 		for (final Item it : items)
 		{
-			map.merge(it.id, it.qty, Integer::sum);
+			map.put(it.id, map.get(it.id) + it.qty);
 		}
 		return map;
 	}

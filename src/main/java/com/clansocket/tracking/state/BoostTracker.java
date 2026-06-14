@@ -20,6 +20,8 @@ import com.clansocket.protocol.state.BoostEntry;
 @Singleton
 public class BoostTracker extends LatchedSnapshotTracker<Long>
 {
+	private static final Skill[] SKILLS = Skill.values();
+
 	@Inject
 	private ClanSocketConfig config;
 
@@ -30,20 +32,23 @@ public class BoostTracker extends LatchedSnapshotTracker<Long>
 		{
 			return;
 		}
-		final List<BoostEntry> entries = new ArrayList<>();
 		long sig = 1L;
-		for (final Skill s : Skill.values())
+		for (final Skill s : SKILLS)
 		{
-			final int diff = client.getBoostedSkillLevel(s) - client.getRealSkillLevel(s);
-			sig = sig * Hashes.HASH_PRIME + diff;
-			if (diff != 0)
-			{
-				entries.add(new BoostEntry(s.name(), diff));
-			}
+			sig = sig * Hashes.HASH_PRIME + (client.getBoostedSkillLevel(s) - client.getRealSkillLevel(s));
 		}
 		if (!latch.update(sig))
 		{
 			return;
+		}
+		final List<BoostEntry> entries = new ArrayList<>();
+		for (final Skill s : SKILLS)
+		{
+			final int diff = client.getBoostedSkillLevel(s) - client.getRealSkillLevel(s);
+			if (diff != 0)
+			{
+				entries.add(new BoostEntry(s.name(), diff));
+			}
 		}
 		batcher.enqueue(new Payload("boosts", "hash", Hashes.of(sig), "boosts", Collections.unmodifiableList(entries)));
 	}
