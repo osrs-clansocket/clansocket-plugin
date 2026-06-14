@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import com.clansocket.util.Json;
+import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
@@ -22,10 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public final class AreaResolver
 {
+	private final Gson gson;
 	private Map<Long, String> regionToArea;
 
 	@Inject
-	AreaResolver() {
+	AreaResolver(final Gson gson) {
+		this.gson = gson;
 	}
 
 	public String resolve(final int regionId)
@@ -42,7 +44,7 @@ public final class AreaResolver
 		return (((long) rx) << WorldConstants.PACK_SHIFT) | (ry & WorldConstants.PACK_MASK);
 	}
 
-	private static Map<Long, String> load()
+	private Map<Long, String> load()
 	{
 		final Map<Long, String> out = new HashMap<>();
 		try (final InputStream is = AreaResolver.class.getResourceAsStream("/" + WorldConstants.LOCATIONS_RESOURCE))
@@ -62,14 +64,14 @@ public final class AreaResolver
 		return out;
 	}
 
-	private static void populate(final Map<Long, String> out, final InputStream is) throws IOException
+	private void populate(final Map<Long, String> out, final InputStream is) throws IOException
 	{
 		try (final Reader reader = new InputStreamReader(is))
 		{
 			final Type type = new TypeToken<Map<String, List<List<Integer>>>>()
 			{
 			}.getType();
-			final Map<String, List<List<Integer>>> data = Json.GSON.fromJson(reader, type);
+			final Map<String, List<List<Integer>>> data = gson.fromJson(reader, type);
 			if (data == null)
 			{
 				return;

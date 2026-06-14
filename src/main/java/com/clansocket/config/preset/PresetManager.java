@@ -22,14 +22,16 @@ public final class PresetManager
 	private final ConfigManager configManager;
 	private final PresetStore store;
 	private final PresetApplier applier;
+	private final PresetCodec codec;
 
 	@Inject
 	public PresetManager(final ClanSocketConfig config, final ConfigManager configManager, final PresetStore store,
-	        final PresetApplier applier) {
+	        final PresetApplier applier, final PresetCodec codec) {
 		this.config = config;
 		this.configManager = configManager;
 		this.store = store;
 		this.applier = applier;
+		this.codec = codec;
 	}
 
 	public boolean useSlot(final int slot)
@@ -128,7 +130,7 @@ public final class PresetManager
 	{
 		try
 		{
-			final OptionalInt match = store.findMatchingSlot(PresetCodec.canonicalHash(schema));
+			final OptionalInt match = store.findMatchingSlot(codec.canonicalHash(schema));
 			if (match.isPresent())
 			{
 				return match;

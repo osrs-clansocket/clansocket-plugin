@@ -9,8 +9,8 @@ import javax.inject.Singleton;
 import net.runelite.client.config.ConfigManager;
 
 import com.clansocket.ClanSocketConstants;
-import com.clansocket.util.Json;
 import com.clansocket.util.Strings;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 @Singleton
@@ -18,6 +18,9 @@ public final class KillCountLookup
 {
 	@Inject
 	private ConfigManager configManager;
+
+	@Inject
+	private Gson gson;
 
 	private final ConcurrentMap<String, Integer> ourCounter = new ConcurrentHashMap<>();
 
@@ -77,11 +80,11 @@ public final class KillCountLookup
 		return parseKills(json);
 	}
 
-	private static Integer parseKills(final String json)
+	private Integer parseKills(final String json)
 	{
 		try
 		{
-			final JsonObject obj = Json.GSON.fromJson(json, JsonObject.class);
+			final JsonObject obj = gson.fromJson(json, JsonObject.class);
 			if (obj == null || !obj.has(LootConstants.LOOT_TRACKER_KILLS_FIELD))
 			{
 				return null;

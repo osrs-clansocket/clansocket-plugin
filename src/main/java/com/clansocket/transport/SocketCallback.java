@@ -9,6 +9,7 @@ import com.clansocket.panel.PanelStats;
 import com.clansocket.transport.consent.ConsentDispatch;
 import com.clansocket.util.Json;
 import com.clansocket.util.Strings;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,10 +27,11 @@ public final class SocketCallback extends WebSocketListener
 	private final ConsentDispatch consentDispatch;
 	private final LifecycleListeners listeners;
 	private final PresetApplier presetApplier;
+	private final Gson gson;
 
 	public SocketCallback(final ClanSocket socket, final GameChatEmitter chatEmitter, final SessionStore sessions,
 	        final PanelStats panelStats, final ConsentDispatch consentDispatch, final LifecycleListeners listeners,
-	        final PresetApplier presetApplier) {
+	        final PresetApplier presetApplier, final Gson gson) {
 		this.socket = socket;
 		this.chatEmitter = chatEmitter;
 		this.sessions = sessions;
@@ -37,6 +39,7 @@ public final class SocketCallback extends WebSocketListener
 		this.consentDispatch = consentDispatch;
 		this.listeners = listeners;
 		this.presetApplier = presetApplier;
+		this.gson = gson;
 	}
 
 	@Override
@@ -56,7 +59,7 @@ public final class SocketCallback extends WebSocketListener
 		log.debug("ClanSocket WS message: {}", text);
 		try
 		{
-			final JsonObject obj = Json.GSON.fromJson(text, JsonObject.class);
+			final JsonObject obj = gson.fromJson(text, JsonObject.class);
 			if (!obj.has(ClanSocketConstants.WS_FIELD_TYPE))
 			{
 				return;
@@ -86,7 +89,7 @@ public final class SocketCallback extends WebSocketListener
 			chatEmitter.serverBroadcast(Json.optString(obj, ClanSocketConstants.WS_FIELD_MESSAGE));
 		} else if (ClanSocketConstants.WS_TYPE_CLAN_CONFIG_PUSH.equals(type))
 		{
-			presetApplier.apply(Json.GSON.fromJson(obj.get(ClanSocketConstants.WS_FIELD_PAYLOAD), PresetSchema.class),
+			presetApplier.apply(gson.fromJson(obj.get(ClanSocketConstants.WS_FIELD_PAYLOAD), PresetSchema.class),
 			        PresetApplier.Source.CLAN);
 		} else
 		{

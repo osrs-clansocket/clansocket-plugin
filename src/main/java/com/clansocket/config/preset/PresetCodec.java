@@ -8,30 +8,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import net.runelite.client.config.ConfigManager;
 
 import com.clansocket.ClanSocketConstants;
-import com.clansocket.util.Json;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 
+@Singleton
 public final class PresetCodec
 {
-	private PresetCodec() {
+	private final Gson gson;
+
+	@Inject
+	public PresetCodec(final Gson gson) {
+		this.gson = gson;
 	}
 
-	public static String encode(final PresetSchema schema)
+	public String encode(final PresetSchema schema)
 	{
-		return Json.GSON.toJson(schema);
+		return gson.toJson(schema);
 	}
 
-	public static PresetSchema decode(final String json)
+	public PresetSchema decode(final String json)
 	{
 		final PresetSchema schema;
 		try
 		{
-			schema = Json.GSON.fromJson(json, PresetSchema.class);
+			schema = gson.fromJson(json, PresetSchema.class);
 		} catch (final JsonSyntaxException ex)
 		{
 			throw new IllegalArgumentException(PresetConstants.LOG_BAD_JSON, ex);
@@ -59,11 +67,11 @@ public final class PresetCodec
 		}
 	}
 
-	public static String canonicalHash(final PresetSchema schema)
+	public String canonicalHash(final PresetSchema schema)
 	{
 		final Map<String, JsonElement> sorted = new TreeMap<>(schema.getValues());
 		sorted.keySet().removeIf(PresetCodec::isDenylisted);
-		return sha256Hex(Json.GSON.toJson(sorted));
+		return sha256Hex(gson.toJson(sorted));
 	}
 
 	public static boolean isDenylisted(final String key)

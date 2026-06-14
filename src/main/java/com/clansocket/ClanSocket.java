@@ -15,7 +15,7 @@ import com.clansocket.transport.SessionStore;
 import com.clansocket.transport.SocketCallback;
 import com.clansocket.transport.WsOpener;
 import com.clansocket.transport.consent.ConsentDispatch;
-import com.clansocket.util.Json;
+import com.google.gson.Gson;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +45,8 @@ public class ClanSocket
 	private PendingQueue pending;
 	@Inject
 	private ScheduledExecutorService executor;
+	@Inject
+	private Gson gson;
 	@Getter
 	private volatile String endpoint;
 	private volatile boolean shouldBeConnected;
@@ -98,7 +100,7 @@ public class ClanSocket
 
 	private void doSend(final Object payload)
 	{
-		final String json = Json.GSON.toJson(payload);
+		final String json = gson.toJson(payload);
 		if (json.length() > ClanSocketConstants.PAYLOAD_WARN_BYTES)
 		{
 			log.warn("ClanSocket WS payload {} bytes approaching server cap; risk of server-side rejection",
@@ -167,6 +169,6 @@ public class ClanSocket
 			return;
 		}
 		ws = opener.open(endpoint, new SocketCallback(this, chatEmitter, sessions, panelStats, consentDispatch,
-		        listeners, presetApplier));
+		        listeners, presetApplier, gson));
 	}
 }

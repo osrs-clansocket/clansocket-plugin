@@ -16,8 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class PresetStore
 {
+	private final PresetCodec codec;
+
 	@Inject
-	public PresetStore() {
+	public PresetStore(final PresetCodec codec) {
+		this.codec = codec;
 		ensureDir();
 	}
 
@@ -33,13 +36,13 @@ public final class PresetStore
 			return Optional.empty();
 		}
 		final String json = Files.readString(pathFor(slot), StandardCharsets.UTF_8);
-		return Optional.of(PresetCodec.decode(json));
+		return Optional.of(codec.decode(json));
 	}
 
 	public void write(final int slot, final PresetSchema schema) throws IOException
 	{
 		ensureDir();
-		Files.writeString(pathFor(slot), PresetCodec.encode(schema), StandardCharsets.UTF_8);
+		Files.writeString(pathFor(slot), codec.encode(schema), StandardCharsets.UTF_8);
 	}
 
 	public boolean delete(final int slot)
@@ -58,7 +61,7 @@ public final class PresetStore
 			try
 			{
 				final Optional<PresetSchema> opt = read(i);
-				if (opt.isPresent() && PresetCodec.canonicalHash(opt.get()).equals(targetHash))
+				if (opt.isPresent() && codec.canonicalHash(opt.get()).equals(targetHash))
 				{
 					return OptionalInt.of(i);
 				}
