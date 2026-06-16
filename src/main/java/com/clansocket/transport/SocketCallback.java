@@ -1,6 +1,7 @@
 package com.clansocket.transport;
 
 import com.clansocket.ClanSocket;
+import com.clansocket.ClanSocketConfig;
 import com.clansocket.ClanSocketConstants;
 import com.clansocket.chat.GameChatEmitter;
 import com.clansocket.config.preset.PresetApplier;
@@ -27,11 +28,12 @@ public final class SocketCallback extends WebSocketListener
 	private final ConsentDispatch consentDispatch;
 	private final LifecycleListeners listeners;
 	private final PresetApplier presetApplier;
+	private final ClanSocketConfig config;
 	private final Gson gson;
 
 	public SocketCallback(final ClanSocket socket, final GameChatEmitter chatEmitter, final SessionStore sessions,
 	        final PanelStats panelStats, final ConsentDispatch consentDispatch, final LifecycleListeners listeners,
-	        final PresetApplier presetApplier, final Gson gson) {
+	        final PresetApplier presetApplier, final ClanSocketConfig config, final Gson gson) {
 		this.socket = socket;
 		this.chatEmitter = chatEmitter;
 		this.sessions = sessions;
@@ -39,6 +41,7 @@ public final class SocketCallback extends WebSocketListener
 		this.consentDispatch = consentDispatch;
 		this.listeners = listeners;
 		this.presetApplier = presetApplier;
+		this.config = config;
 		this.gson = gson;
 	}
 
@@ -89,6 +92,10 @@ public final class SocketCallback extends WebSocketListener
 			chatEmitter.serverBroadcast(Json.optString(obj, ClanSocketConstants.WS_FIELD_MESSAGE));
 		} else if (ClanSocketConstants.WS_TYPE_CLAN_CONFIG_PUSH.equals(type))
 		{
+			if (config.mode() != ClanSocketConfig.ConfigMode.CLAN)
+			{
+				return;
+			}
 			presetApplier.apply(gson.fromJson(obj.get(ClanSocketConstants.WS_FIELD_PAYLOAD), PresetSchema.class),
 			        PresetApplier.Source.CLAN);
 		} else

@@ -46,6 +46,8 @@ public class ClanSocket
 	@Inject
 	private ScheduledExecutorService executor;
 	@Inject
+	private ClanSocketConfig config;
+	@Inject
 	private Gson gson;
 	@Getter
 	private volatile String endpoint;
@@ -169,6 +171,6 @@ public class ClanSocket
 			return;
 		}
 		ws = opener.open(endpoint, new SocketCallback(this, chatEmitter, sessions, panelStats, consentDispatch,
-		        listeners, presetApplier, gson));
+		        listeners, presetApplier, config, gson));
 	}
 }
