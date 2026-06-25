@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup & claiming your clan
+    url: https://github.com/osrs-clansocket/clansocket-plugin/wiki
+    about: How to install, configure, and claim your clan.
+  - name: ClanSocket website
+    url: https://clansocket.com
+    about: The dashboard and general info.
+  - name: Security report
+    url: https://github.com/osrs-clansocket/.github/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately, not as a public issue.
