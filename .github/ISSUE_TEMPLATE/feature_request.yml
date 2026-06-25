@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest an improvement to the ClanSocket RuneLite plugin.
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Connection / WebSocket
+        - Side panel
+        - A telemetry stream
+        - Presets
+        - Consent / privacy
+        - Clan claim / registration
+        - Configuration
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem?
+      description: What are you trying to do that's hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
