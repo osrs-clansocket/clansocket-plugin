@@ -1,0 +1,88 @@
+name: Bug report
+description: A problem with the ClanSocket RuneLite plugin.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first. For setup and claiming your clan,
+        see the [wiki](https://github.com/osrs-clansocket/clansocket-plugin/wiki).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Connection / WebSocket
+        - Side panel
+        - A telemetry stream (specify below)
+        - Presets
+        - Consent / privacy
+        - Clan claim / registration
+        - Configuration
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Shown on the Plugin Hub page and in the RuneLite Configuration tab.
+    validations:
+      required: true
+  - type: input
+    id: runelite-version
+    attributes:
+      label: RuneLite version
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: clean-profile
+    attributes:
+      label: Reproduces on a clean RuneLite profile?
+      description: Helps rule out conflicts with other plugins.
+      options:
+        - "Yes"
+        - "No"
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: connection-state
+    attributes:
+      label: Connection / clan state
+      description: 'What the panel header shows, e.g. "Online — clan: MyClan", "Offline", "(unclaimed)".'
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: RuneLite client logs and screenshots help a lot. Do not paste secrets.
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I'm on the latest plugin version.
+        - label: My clan is claimed at clansocket.com (telemetry does not flow for unclaimed clans).
