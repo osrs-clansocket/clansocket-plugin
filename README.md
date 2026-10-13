@@ -1,10 +1,9 @@
 # ClanSocket
-[![](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/rank/plugin/clansocket)](https://runelite.net/plugin-hub/show/clansocket)
-[![](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/installs/plugin/clansocket)](https://runelite.net/plugin-hub/show/clansocket)
+[![Plugin Hub rank](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/rank/plugin/clansocket)](https://runelite.net/plugin-hub/show/clansocket) [![Plugin Hub installs](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/installs/plugin/clansocket)](https://runelite.net/plugin-hub/show/clansocket)
 
-Streams real-time OSRS clan and gameplay telemetry over a single WebSocket to a clan dashboard at [clansocket.com](https://clansocket.com). Live world map, member roster, per-stream privacy gates, GDPR-grade data rights.
+Sends your own Old School RuneScape clan and gameplay events over a single WebSocket to the ClanSocket relay at [clansocket.com](https://clansocket.com). The relay passes them on, live, to the sites and services your clan's Owner or Deputy Owner has approved, and stores none of them. Every stream has its own switch in the side panel.
 
-The plugin targets whichever in-game clan you are currently a member of. Telemetry only reaches a dashboard if your clan has been claimed there; for unclaimed clans the server drops events silently.
+The plugin follows the in-game clan you are a member of. Your events reach a site only after your clan approved it with an in-game prompt. Until then the relay drops them.
 
 ---
 
@@ -14,7 +13,7 @@ The plugin targets whichever in-game clan you are currently a member of. Telemet
 2. Enable the plugin.
 3. Log into RuneScape on a character that is a member of your clan.
 
-If your clan is not yet claimed, ask your Owner or Deputy Owner to claim it from clansocket.com — see the [Claim your clan](https://github.com/osrs-clansocket/clansocket-plugin/wiki/Claim-Your-Clan) wiki page for the full walkthrough.
+A site that uses ClanSocket asks your clan for access through a prompt in the side panel, and your Owner or Deputy Owner confirms it there. See the [Claim your clan](https://github.com/osrs-clansocket/clansocket-plugin/wiki/Claim-Your-Clan) wiki page. The sites built on the relay are listed at [clansocket.com](https://clansocket.com/#consumers).
 
 ---
 
@@ -24,12 +23,12 @@ The plugin adds a side panel to the RuneLite right-rail. The panel is the primar
 
 ![panel](https://github.com/osrs-clansocket/clansocket-plugin/wiki/screenshots/plugin-active.png)
 
-- **Header** — connection state (Online / Offline / Reconnect), clan status (`clan: name` green when registered, `(unclaimed)` orange if not), and a reset button for the per-account event counters.
+- **Header**: connection state (Online, Offline, Reconnect), your clan, and a reset button for the per-account event counters.
 - **Presets** — Manual or Clan mode toggle, plus 7 save slots.
 - **Telemetry cards** — 24 cards, one per data stream. Click to toggle off; click again to re-enable. Frequent streams render a 60-second sparkline; infrequent streams show a `Last: Nm ago` indicator.
 - **Footer** — links to clansocket.com and the GitHub repo.
 
-When the dashboard sends a consent request, a green-pulsing banner appears above the cards with confirm + reject buttons and a countdown.
+When a site asks your clan for access, or asks to verify your name, a green-pulsing banner appears above the cards with confirm and reject buttons and a countdown. A rejected or unanswered request gives nothing away.
 
 ![consent banner](https://github.com/osrs-clansocket/clansocket-plugin/wiki/screenshots/ingame-panel-notif-clan-claim.png)
 
@@ -41,7 +40,7 @@ When the dashboard sends a consent request, a green-pulsing banner appears above
 
 | Setting | Effect |
 | --- | --- |
-| WebSocket URL | `wss://` URL of your clan's dashboard endpoint. Blank uses clansocket.com. Bare host (no scheme) is auto-prefixed with `wss://`. |
+| WebSocket URL | The relay's address. Blank uses `wss://ws.clansocket.com/data`. A bare host (no scheme) is prefixed with `wss://`. |
 
 All other settings live in the side panel.
 
@@ -51,7 +50,23 @@ All other settings live in the side panel.
 
 When the plugin is enabled and you are logged in to a clan-member character, events flow over a single WebSocket connection as per-tick batches:
 
-**Game telemetry (your character only).** Identity (RSN, account hash, account type, world, world types, current activity, clan name + rank + join date + member counts, session start); clan roster snapshots; skills snapshot + XP gains + level-ups; combat (hitsplats dealt and taken, current target); player deaths; slayer state; vitals (run energy, weight, special attack); active prayers; stat boosts; status effects (poison, venom, disease, cold); location (x, y, plane, region, area); inventory + equipment + seed vault (baseline snapshot per session, then per-change deltas); bank open/close snapshots; rune pouch slot contents; loot drops; pet drops; quest snapshots and completions; diary snapshots and completions; clue scroll opens and completions; collection log per-item notifications and full snapshots; combat achievement catalog and per-task completions; farming patch changes; menu actions on game objects and NPCs.
+**Game telemetry, your character only:**
+
+- Identity: RSN, account hash, account type, world, world types, current activity, clan name, rank, join date, member counts and session start.
+- Clan roster and rank title snapshots.
+- Skills snapshot, XP gains and level-ups.
+- Combat: hitsplats dealt and taken, and the current target.
+- Deaths and slayer state.
+- Vitals: hitpoints, prayer, run energy, weight and special attack.
+- Active prayers, stat boosts, and poison and venom.
+- Location (x, y, plane, region, area) and world hops.
+- Inventory, equipment and seed vault: a snapshot per session, then each change.
+- Bank open and close snapshots, and rune pouch slots.
+- Loot and pet drops.
+- Quests, diaries, clue scrolls, the collection log and combat achievements: snapshots and completions.
+- Farming patch changes, and menu actions on objects, NPCs, items and emotes.
+
+The full list with each event's fields is at [clansocket.com](https://clansocket.com/#plugin).
 
 **Clan chat.** Every message and Jagex-generated broadcast visible in the configured clan channel — same pattern as the long-running [clan-chat-webhook](https://github.com/pascalla/clan-chat-webhook) plugin. Scoped strictly to your configured clan; never any other channel.
 
@@ -60,7 +75,7 @@ When the plugin is enabled and you are logged in to a clan-member character, eve
 - Public chat, private messages, friends-list chat, guest chat, or any clan channel other than the configured one.
 - Other players' character data (only their messages in your clan channel, and Jagex's broadcasts about them).
 - Any data when you are not logged in to RuneScape.
-- Any data when your in-game clan has not been claimed on the dashboard.
+- Anything to a site your clan has not approved. The relay drops events for a clan with no approved site.
 
 ---
 
@@ -70,11 +85,11 @@ Three layers of control:
 
 - **24 per-stream toggles** in the side panel — click any card to disable a stream.
 - **Explicit consent** dialogs on Location re-enable and on the Manual → Clan mode switch.
-- **Data rights** on clansocket.com — browse every stored row, export a GDPR-style portable zip, or remove all data tied to your account.
+- **No storage at the relay.** The relay passes events through memory and keeps none of them. A site your clan approved holds what it received, under its own privacy policy: ask that site to see, export or delete your data.
 
-Location streams real-time coords (x, y, plane, region, area) to your clan dashboard while you are logged in, visible to clan members only. The explicit YES/NO consent dialog fires when you toggle Location from OFF back to ON, so you see it any time you re-enable after disabling. On a fresh install no dialog appears; Location streams from the moment you log in. To gate this before any coords leave your client, toggle Location off from the panel right after install and re-enable when you are ready.
+Location streams your real-time position (x, y, plane, region, area) to the sites your clan approved while you are logged in. The explicit YES/NO consent dialog fires when you toggle Location from OFF back to ON, so you see it any time you re-enable after disabling. On a fresh install no dialog appears; Location streams from the moment you log in. To gate this before any coords leave your client, toggle Location off from the panel right after install and re-enable when you are ready.
 
-For the full privacy model and the data-rights surface, see [Privacy overview](https://github.com/osrs-clansocket/clansocket-plugin/wiki/Privacy-Overview) and [Data rights](https://github.com/osrs-clansocket/clansocket-plugin/wiki/Data-Rights) in the wiki.
+For the full privacy model, see [Privacy overview](https://github.com/osrs-clansocket/clansocket-plugin/wiki/Privacy-Overview) and [Data rights](https://github.com/osrs-clansocket/clansocket-plugin/wiki/Data-Rights) in the wiki, and the relay's policy at [clansocket.com](https://clansocket.com/#privacy).
 
 ---
 
